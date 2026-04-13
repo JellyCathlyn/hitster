@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Hitster Card</title>
+
+<style>
+:root {
+  --main-color: #ff00cc;
+}
+
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: linear-gradient(135deg, #6a00ff, #00d4ff);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+}
+
+/* TARJETA */
+.card {
+  background: #111;
+  border-radius: 20px;
+  padding: 20px;
+  border: 3px solid var(--main-color);
+  box-shadow: 0 0 25px var(--main-color);
+  width: 90%;
+  max-width: 350px;
+  text-align: center;
+}
+
+/* GRID */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.square {
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 12px;
+  cursor: pointer;
+  position: relative;
+}
+
+/* X al marcar */
+.square.active::after {
+  content: "✕";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  font-size: 50px;
+  font-weight: bold;
+  text-shadow: 0 0 10px black;
+}
+
+/* TÍTULO */
+.title {
+  color: var(--main-color);
+  font-size: 28px;
+  margin: 10px 0;
+  text-shadow: 0 0 10px var(--main-color);
+}
+
+/* INPUT */
+input {
+  width: 90%;
+  padding: 15px;
+  border-radius: 10px;
+  border: none;
+  font-size: 16px;
+  margin-bottom: 15px;
+}
+
+/* BOTONES */
+button {
+  width: 100%;
+  padding: 15px;
+  border: none;
+  border-radius: 12px;
+  background: var(--main-color);
+  color: white;
+  font-weight: bold;
+  font-size: 16px;
+  margin-top: 10px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="card">
+
+  <div class="grid" id="grid"></div>
+
+  <div class="title">HITSTER</div>
+
+  <input type="text" id="text" placeholder="Escribe aquí...">
+
+  <button onclick="clearText()">BORRAR TEXTO</button>
+  <button onclick="generateGrid()">NUEVA TARJETA</button>
+
+</div>
+
+<script>
+// 🎨 COLORES FIJOS (LOS TUYOS)
+const COLORS = [
+  "#0e89d5", // azul
+  "#ffd700", // amarillo
+  "#338f41", // verde
+  "#8339cc", // morado
+  "#ff4da6"  // rosa
+];
+
+const SIZE = 5;
+const MAX_PER_COLOR = 5;
+
+const gridElement = document.getElementById("grid");
+
+// 🔥 GENERADOR INTELIGENTE
+function generateGrid() {
+  gridElement.innerHTML = "";
+
+  let grid = Array(SIZE).fill().map(() => Array(SIZE).fill(null));
+
+  let colorCount = {};
+  COLORS.forEach(c => colorCount[c] = 0);
+
+  function isValid(row, col, color) {
+    // máximo 5 por color
+    if (colorCount[color] >= MAX_PER_COLOR) return false;
+
+    // evitar 3 iguales horizontal
+    if (col >= 2 &&
+        grid[row][col-1] === color &&
+        grid[row][col-2] === color) return false;
+
+    // evitar 3 iguales vertical
+    if (row >= 2 &&
+        grid[row-1][col] === color &&
+        grid[row-2][col] === color) return false;
+
+    return true;
+  }
+
+  function fillGrid(row, col) {
+    if (row === SIZE) return true;
+
+    let nextRow = col === SIZE-1 ? row+1 : row;
+    let nextCol = col === SIZE-1 ? 0 : col+1;
+
+    let shuffled = [...COLORS].sort(() => Math.random() - 0.5);
+
+    for (let color of shuffled) {
+      if (isValid(row, col, color)) {
+        grid[row][col] = color;
+        colorCount[color]++;
+
+        if (fillGrid(nextRow, nextCol)) return true;
+
+        // backtracking
+        grid[row][col] = null;
+        colorCount[color]--;
+      }
+    }
+
+    return false;
+  }
+
+  fillGrid(0, 0);
+
+  // render
+  for (let row = 0; row < SIZE; row++) {
+    for (let col = 0; col < SIZE; col++) {
+      let square = document.createElement("div");
+      square.classList.add("square");
+      square.style.background = grid[row][col];
+
+      square.addEventListener("click", () => {
+        square.classList.toggle("active");
+      });
+
+      gridElement.appendChild(square);
+    }
+  }
+}
+
+// borrar texto
+function clearText() {
+  document.getElementById("text").value = "";
+}
+
+// generar al cargar
+generateGrid();
+</script>
+
+</body>
+</html>
